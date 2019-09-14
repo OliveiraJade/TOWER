@@ -12,20 +12,27 @@ public class torre : MonoBehaviour
 
     private float momentodoultimodisparo;
 
+    [SerializeField] private float raioDeAlcance;
+
         
     // Start is called before the first frame update
     void Start()
     {
-        Atira();
+
     }
 
     // Update is called once per frame
     void Update()
     {
-        Atira();
+        Inimigo alvo = EscolheAlvo();
+        if(alvo != null)
+        {
+            Atira(alvo);
+        }
+      
     }
 
-    private void Atira()
+    private void Atira(Inimigo inimigo)
     {
         float tempoAtual = Time.time;
         if (tempoAtual > momentodoultimodisparo + tempoderecarga)
@@ -33,10 +40,32 @@ public class torre : MonoBehaviour
             momentodoultimodisparo = tempoAtual;
             GameObject pontodedisparo = this.transform.Find("canhaodatorre/pontodedisparo").gameObject;
             Vector3 posicaoDopontodedisparo = pontodedisparo.transform.position;
-            Instantiate(projetilPrefab, posicaoDopontodedisparo, Quaternion.identity);
+            //Instantiate(projetilPrefab, posicaoDopontodedisparo, Quaternion.identity);
+            GameObject projetilObject = (GameObject)Instantiate(projetilPrefab, posicaoDopontodedisparo, Quaternion.identity);
+            missil missilpropriedade = projetilObject.GetComponent<missil>();
+            missilpropriedade.DefineAlvo(inimigo);
+
         }
+    }
 
+    private Inimigo EscolheAlvo()
+    {
+        GameObject[] inimigos = GameObject.FindGameObjectsWithTag("Inimigo");
+        foreach(GameObject inimigo in inimigos)
+        {
+            if (EstaNoRaioDeAlcance(inimigo))
+            {
+                return inimigo.GetComponent<Inimigo>();
+            }
+        }
+        return null;
+    }
 
-
+    private bool EstaNoRaioDeAlcance(GameObject inimigo)
+    {
+        Vector3 posicaoDoInimigoNoPlano = Vector3.ProjectOnPlane(inimigo.transform.position, Vector3.up);
+        Vector3 posicaoDaTorreNoPlano = Vector3.ProjectOnPlane(this.transform.position, Vector3.up);
+        float distanciaParaInimigo = Vector3.Distance(posicaoDaTorreNoPlano, posicaoDoInimigoNoPlano);
+        return distanciaParaInimigo <= raioDeAlcance;
     }
 }
